@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { generateClientAvatar } from './services/openai';
 
 dotenv.config();
 
@@ -10,25 +11,40 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-app.post('/api/client-avatar', (req, res) => {
-    console.log('Received request for client avatar');
-    console.log('Request body:', req.body);
+app.post('/api/client-avatar', async (req, res) => {
+  const { businessType, targetAudience, keyProblems, desiredOutcomes } = req.body;
+
+  const prompt = `Create a detailed client avatar for a ${businessType} business. 
+  Target Audience: ${targetAudience}
+  Key Problems: ${keyProblems}
+  Desired Outcomes: ${desiredOutcomes}
   
-    const { businessType, targetAudience, keyProblems, desiredOutcomes } = req.body;
-  
-    // For now, we'll just echo back the data
-    // In the future, we'll process this with AI
-    const clientAvatar = {
+  Please provide a comprehensive client avatar including:
+  1. Demographic details
+  2. Psychographic characteristics
+  3. Goals and aspirations
+  4. Pain points and challenges
+  5. Preferred communication channels
+  6. Decision-making factors
+  7. A day in their life`;
+
+  try {
+    const generatedAvatar = await generateClientAvatar(prompt);
+
+    const response = {
       businessType,
       targetAudience,
       keyProblems,
       desiredOutcomes,
-      generatedDescription: `A client for a ${businessType} business who ${targetAudience}. They face problems such as ${keyProblems} and desire outcomes like ${desiredOutcomes}.`
+      generatedAvatar
     };
-  
-    console.log('Sending response:', clientAvatar);
-    res.json(clientAvatar);
-  });
+
+    res.json(response);
+  } catch (error) {
+    console.error('Error generating client avatar:', error);
+    res.status(500).json({ error: 'Failed to generate client avatar' });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
