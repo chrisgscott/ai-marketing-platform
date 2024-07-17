@@ -11,6 +11,8 @@ export default function ClientAvatarCreator() {
     keyProblems: '',
     desiredOutcomes: '',
   })
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -22,10 +24,32 @@ export default function ClientAvatarCreator() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Send data to API and get response
-    console.log('Form submitted:', formData)
-    // For now, we'll just redirect back to the dashboard
-    router.push('/dashboard')
+    setIsLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('http://localhost:3001/api/client-avatar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate client avatar')
+      }
+
+      const data = await response.json()
+      console.log('Generated client avatar:', data)
+      // TODO: Store this data and redirect to a results page
+      router.push('/dashboard')
+    } catch (err) {
+      setError('An error occurred while generating the client avatar. Please try again.')
+      console.error(err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
