@@ -29,9 +29,9 @@ export default function USPResults() {
         setError('No USP found. Please create a new USP.')
       }
     }
-
+  
     fetchUSP()
-  }, [router])
+  }, [])
 
   if (error) {
     return (
@@ -55,13 +55,23 @@ export default function USPResults() {
       <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
         <h2 className="text-xl font-semibold mb-2">Your USP</h2>
         <p className="mb-4">{usp.generatedUSP}</p>
-
-        <h2 className="text-xl font-semibold mb-2">Explanation</h2>
-        <p className="mb-4">{usp.explanation}</p>
+  
+        {usp.basedOnAvatars ? (
+          <>
+            <h2 className="text-xl font-semibold mb-2">Explanation</h2>
+            <p className="mb-4">{usp.explanation}</p>
+            <p className="text-sm text-gray-600">This USP was generated based on your client avatars.</p>
+          </>
+        ) : (
+          <p className="text-sm text-gray-600">This USP was generated without client avatar data. For a more personalized USP, consider creating a client avatar first.</p>
+        )}
       </div>
       <div className="flex justify-between">
         <Link href="/generators/usp" className="text-blue-500 hover:text-blue-700">
           Create Another USP
+        </Link>
+        <Link href="/generators/client-avatar" className="text-blue-500 hover:text-blue-700">
+          Create Client Avatar
         </Link>
         <Link href="/dashboard" className="text-blue-500 hover:text-blue-700">
           Back to Dashboard
