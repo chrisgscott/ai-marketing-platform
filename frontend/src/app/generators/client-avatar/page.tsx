@@ -26,38 +26,32 @@ export default function ClientAvatarCreator() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-    setResponse(null);
-
+    e.preventDefault()
+    setIsLoading(true)
+    setError('')
+  
     try {
-      const response = await fetch("http://localhost:3001/api/client-avatar", {
-        method: "POST",
+      const response = await fetch('http://localhost:3001/api/client-avatar', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          userId: 'user123', // Replace with actual user ID when you have authentication
+          ...formData
+        }),
       });
-
+  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+  
       const data = await response.json();
-      console.log("Generated client avatar:", data);
-      setResponse(data);
-
-      // Store the avatar in localStorage
-      localStorage.setItem("clientAvatar", JSON.stringify(data));
-
-      // Redirect to the results page
-      router.push("/generators/client-avatar/results");
+      localStorage.setItem('clientAvatarId', data.id);
+      router.push('/generators/client-avatar/results');
     } catch (err) {
-      console.error("Error details:", err);
-      setError(
-        "An error occurred while generating the client avatar. Please try again."
-      );
+      console.error('Error details:', err);
+      setError('An error occurred while generating the client avatar. Please try again.');
     } finally {
       setIsLoading(false);
     }
