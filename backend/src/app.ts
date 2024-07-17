@@ -55,6 +55,64 @@ app.post('/api/client-avatar', async (req, res) => {
   }
 });
 
+app.post('/api/usp', async (req, res) => {
+    const { userId, businessName, productService, targetAudience, keyBenefits, competitors } = req.body;
+  
+    try {
+      // Fetch all client avatars for the user
+      const clientAvatars = await getClientAvatars(userId);
+  
+      // Create a context string from the client avatars
+      const avatarContext = clientAvatars.map(avatar => `
+        Business Type: ${avatar.businessType}
+        Target Audience: ${avatar.targetAudience}
+        Key Problems: ${avatar.keyProblems}
+        Desired Outcomes: ${avatar.desiredOutcomes}
+        Generated Avatar: ${avatar.generatedAvatar}
+      `).join('\n\n');
+  
+      const prompt = `
+        Create a Unique Selling Proposition (USP) for the following business:
+        Business Name: ${businessName}
+        Product/Service: ${productService}
+        Target Audience: ${targetAudience}
+        Key Benefits: ${keyBenefits}
+        Competitors: ${competitors}
+  
+        Additional context from previously generated client avatars:
+        ${avatarContext}
+  
+        Based on this information, generate a compelling and unique USP that:
+        1. Clearly communicates the main benefit of the product/service
+        2. Differentiates the business from competitors
+        3. Resonates with the target audience
+        4. Is concise and memorable (preferably one sentence)
+  
+        Also, provide a brief explanation of how this USP relates to the client avatars and overall business strategy.
+      `;
+  
+      const generatedUSP = await generateUSP(prompt);
+  
+      const uspData = {
+        userId,
+        businessName,
+        productService,
+        targetAudience,
+        keyBenefits,
+        competitors,
+        generatedUSP
+      };
+  
+      // Save the USP to the database (you'll need to create this function)
+      const uspId = await saveUSP(userId, uspData);
+  
+      res.json({ ...uspData, id: uspId });
+    } catch (error) {
+      console.error('Error generating USP:', error);
+      res.status(500).json({ error: 'Failed to generate USP' });
+    }
+  });
+
 app.get('/api/client-avatar/:id', async (req, res) => {
   try {
     const avatar = await getClientAvatar(req.params.id);

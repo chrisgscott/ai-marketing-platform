@@ -38,3 +38,22 @@ export async function getUserAvatars(userId: string) {
   const collection = database.collection('clientAvatars');
   return collection.find({ userId }).toArray();
 }
+
+export async function saveUSP(userId: string, uspData: any): Promise<string> {
+    const database = await connectToDatabase();
+    const collection = database.collection('usps');
+    const result = await collection.insertOne({ userId, ...uspData, createdAt: new Date() });
+    return result.insertedId.toString();
+  }
+  
+  export async function getUSP(uspId: string) {
+    const database = await connectToDatabase();
+    const collection = database.collection('usps');
+    return collection.findOne({ _id: new ObjectId(uspId) });
+  }
+  
+  export async function getUserUSPs(userId: string) {
+    const database = await connectToDatabase();
+    const collection = database.collection('usps');
+    return collection.find({ userId }).toArray();
+  }
