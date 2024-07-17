@@ -1,9 +1,9 @@
 import Link from 'next/link'
 
 const generators = [
-  { name: 'Client Avatar Creator', href: '/dashboard/client-avatar' },
-  { name: 'USP Generator', href: '/dashboard/usp' },
-  { name: 'Keyword Research Tool', href: '/dashboard/keyword-research' },
+  { name: 'Client Avatar Creator', href: '/generators/client-avatar' },
+  { name: 'USP Generator', href: '/generators/usp' },
+  { name: 'Keyword Research Tool', href: '/generators/keyword-research' },
   // Add more generators here
 ]
 
