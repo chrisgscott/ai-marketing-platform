@@ -9,6 +9,8 @@ import {
   connectToDatabase,
   getUSP,
 } from "./services/database";
+import { registerUser, loginUser } from './services/auth';
+import { authMiddleware, AuthRequest } from './middleware/auth';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -25,9 +27,29 @@ connectToDatabase()
     process.exit(1);
   });
 
-app.post("/api/client-avatar", async (req, res) => {
-  const { userId, businessType, targetAudience, keyProblems, desiredOutcomes } =
-    req.body;
+app.post('/api/register', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await registerUser(email, password);
+    res.status(201).json({ message: 'User registered successfully', userId: user._id });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/api/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const token = await loginUser(email, password);
+    res.json({ token });
+  } catch (error) {
+    res.status(401).json({ error: error.message });
+  }
+});
+
+app.post("/api/client-avatar", authMiddleware, async (req: AuthRequest, res) => {
+  const { businessType, targetAudience, keyProblems, desiredOutcomes } = req.body;
+  const userId = req.user!.userId;
 
   const prompt = `Create a detailed client avatar for a ${businessType} business. 
   Target Audience: ${targetAudience}
@@ -64,21 +86,20 @@ app.post("/api/client-avatar", async (req, res) => {
   }
 });
 
-app.post("/api/usp", async (req, res) => {
+app.post("/api/usp", authMiddleware, async (req: AuthRequest, res) => {
   const {
-    userId,
     businessName,
     productService,
     targetAudience,
     keyBenefits,
     competitors,
   } = req.body;
+  const userId = req.user!.userId;
 
   try {
-    // Fetch all client avatars for the user
     const clientAvatars = await getUserAvatars(userId);
 
-    const MAX_AVATARS = 3; // Adjust as needed
+    const MAX_AVATARS = 3;
 
     let avatarContext = "";
     if (clientAvatars.length > 0) {
@@ -142,7 +163,6 @@ app.post("/api/usp", async (req, res) => {
       basedOnAvatars: clientAvatars.length > 0,
     };
 
-    // Save the USP to the database
     const uspId = await saveUSP(userId, uspData);
 
     res.json({ ...uspData, id: uspId });
@@ -152,11 +172,15 @@ app.post("/api/usp", async (req, res) => {
   }
 });
 
-app.get("/api/client-avatar/:id", async (req, res) => {
+app.get("/api/client-avatar/:id", authMiddleware, async (req: AuthRequest, res) => {
   try {
     const avatar = await getClientAvatar(req.params.id);
     if (avatar) {
-      res.json(avatar);
+      if (avatar.userId === req.user!.userId) {
+        res.json(avatar);
+      } else {
+        res.status(403).json({ error: "Access denied" });
+      }
     } else {
       res.status(404).json({ error: "Avatar not found" });
     }
@@ -166,9 +190,9 @@ app.get("/api/client-avatar/:id", async (req, res) => {
   }
 });
 
-app.get("/api/user/:userId/avatars", async (req, res) => {
+app.get("/api/user/avatars", authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const avatars = await getUserAvatars(req.params.userId);
+    const avatars = await getUserAvatars(req.user!.userId);
     res.json(avatars);
   } catch (error) {
     console.error("Error fetching user avatars:", error);
@@ -176,11 +200,15 @@ app.get("/api/user/:userId/avatars", async (req, res) => {
   }
 });
 
-app.get("/api/usp/:id", async (req, res) => {
+app.get("/api/usp/:id", authMiddleware, async (req: AuthRequest, res) => {
   try {
     const usp = await getUSP(req.params.id);
     if (usp) {
-      res.json(usp);
+      if (usp.userId === req.user!.userId) {
+        res.json(usp);
+      } else {
+        res.status(403).json({ error: "Access denied" });
+      }
     } else {
       res.status(404).json({ error: "USP not found" });
     }
